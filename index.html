@@ -4,882 +4,281 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>NutriLens — Indian Food Recognition</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- ============================================================
+     CONFIG — change this one line to your Render backend URL
+     ============================================================ -->
+<script>
+  window.NUTRILENS_API_URL = 'https://nutrients-backend.onrender.com';
+</script>
+<!-- ============================================================ -->
+
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --saffron:    #FF6B35;
-    --turmeric:   #F7C59F;
-    --leaf:       #2D6A4F;
-    --leaf-light: #52B788;
-    --cream:      #FFFBF5;
-    --ink:        #1A1A2E;
-    --ink-mid:    #3D3D5C;
-    --ink-light:  #8888AA;
-    --card-bg:    #FFFFFF;
-    --border:     #E8E0D5;
-    --shadow:     0 4px 24px rgba(26,26,46,0.08);
-    --shadow-lg:  0 12px 48px rgba(26,26,46,0.14);
-    --radius:     16px;
-    --radius-sm:  10px;
-  }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--ink);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Decorative background pattern */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(circle at 20% 20%, rgba(255,107,53,0.06) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(82,183,136,0.06) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, rgba(247,197,159,0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  #root { position: relative; z-index: 1; }
-
-  /* ── Header ─────────────────────────────────────────────── */
-  .header {
-    padding: 24px 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,251,245,0.85);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--saffron), #FF9563);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-
-  .logo-text {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--ink);
-    letter-spacing: -0.5px;
-  }
-
-  .logo-text span { color: var(--saffron); }
-
-  .header-tag {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--ink-light);
-    background: var(--border);
-    padding: 4px 12px;
-    border-radius: 20px;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── Hero ───────────────────────────────────────────────── */
-  .hero {
-    text-align: center;
-    padding: 72px 48px 48px;
-    max-width: 720px;
-    margin: 0 auto;
-  }
-
-  .hero-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--leaf);
-    background: rgba(82,183,136,0.12);
-    border: 1px solid rgba(82,183,136,0.25);
-    padding: 6px 14px;
-    border-radius: 20px;
-    margin-bottom: 24px;
-    letter-spacing: 0.5px;
-  }
-
-  .hero h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(36px, 5vw, 56px);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -1.5px;
-    margin-bottom: 20px;
-    color: var(--ink);
-  }
-
-  .hero h1 em {
-    font-style: normal;
-    color: var(--saffron);
-  }
-
-  .hero p {
-    font-size: 17px;
-    line-height: 1.7;
-    color: var(--ink-mid);
-    font-weight: 300;
-  }
-
-  /* ── API Config ─────────────────────────────────────────── */
-  .api-config {
-    max-width: 640px;
-    margin: 0 auto 32px;
-    padding: 0 48px;
-  }
-
-  .api-input-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .api-input {
-    flex: 1;
-    font-family: 'DM Sans', monospace;
-    font-size: 13px;
-    padding: 10px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: white;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .api-input:focus { border-color: var(--saffron); }
-  .api-input::placeholder { color: var(--ink-light); }
-
-  .api-status {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: #ccc;
-    flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  .api-status.ok   { background: #2ecc71; }
-  .api-status.err  { background: #e74c3c; }
-  .api-status.ping { background: #f39c12; animation: pulse 1s infinite; }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  .api-hint {
-    font-size: 12px;
-    color: var(--ink-light);
-    margin-top: 6px;
-    padding-left: 2px;
-  }
-
-  /* ── Upload Zone ────────────────────────────────────────── */
-  .upload-section {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 48px 48px;
-  }
-
-  .drop-zone {
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 64px 48px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    background: white;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .drop-zone::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,107,53,0.03), rgba(82,183,136,0.03));
-    opacity: 0;
-    transition: opacity 0.25s;
-  }
-
-  .drop-zone:hover, .drop-zone.dragging {
-    border-color: var(--saffron);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .drop-zone:hover::before, .drop-zone.dragging::before { opacity: 1; }
-
-  .drop-icon {
-    width: 72px; height: 72px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,197,159,0.2));
-    border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
-  }
-
-  .drop-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 8px;
-  }
-
-  .drop-sub {
-    font-size: 14px;
-    color: var(--ink-light);
-    margin-bottom: 24px;
-  }
-
-  .btn-upload {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 28px;
-    background: var(--saffron);
-    color: white;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(255,107,53,0.3);
-  }
-
-  .btn-upload:hover {
-    background: #E55A25;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(255,107,53,0.4);
-  }
-
-  /* ── Preview ────────────────────────────────────────────── */
-  .preview-section {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 48px 80px;
-  }
-
-  .preview-grid {
-    display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 24px;
-    align-items: start;
-  }
-
-  @media (max-width: 900px) {
-    .preview-grid { grid-template-columns: 1fr; }
-  }
-
-  .image-card {
-    background: white;
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-  }
-
-  .image-card img {
-    width: 100%;
-    display: block;
-    object-fit: contain;
-    max-height: 520px;
-    background: #f8f8f8;
-  }
-
-  .image-card-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .image-card-footer span {
-    font-size: 13px;
-    color: var(--ink-light);
-  }
-
-  .btn-retry {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--saffron);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px 0;
-    text-decoration: underline;
-  }
-
-  /* ── Results Panel ──────────────────────────────────────── */
-  .results-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* Total nutrition card */
-  .nutrition-total {
-    background: linear-gradient(135deg, var(--ink), #2D2D4E);
-    color: white;
-    border-radius: var(--radius);
-    padding: 24px;
-    box-shadow: var(--shadow);
-  }
-
-  .nutrition-total-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    opacity: 0.6;
-    margin-bottom: 16px;
-  }
-
-  .nutrition-total-kcal {
-    font-family: 'Syne', sans-serif;
-    font-size: 48px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 4px;
-    color: var(--turmeric);
-  }
-
-  .nutrition-total-kcal span {
-    font-size: 18px;
-    font-weight: 400;
-    opacity: 0.7;
-  }
-
-  .nutrition-macros {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 20px;
-  }
-
-  .macro-item {
-    text-align: center;
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
-    padding: 12px 8px;
-  }
-
-  .macro-value {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--leaf-light);
-  }
-
-  .macro-label {
-    font-size: 11px;
-    opacity: 0.6;
-    margin-top: 2px;
-    letter-spacing: 0.5px;
-  }
-
-  /* Detection list */
-  .detections-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .detection-card {
-    background: white;
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    box-shadow: var(--shadow);
-    border-left: 4px solid var(--saffron);
-    transition: transform 0.15s;
-  }
-
-  .detection-card:hover { transform: translateX(2px); }
-
-  .detection-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  .detection-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-
-  .detection-conf {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background: rgba(82,183,136,0.12);
-    color: var(--leaf);
-  }
-
-  .detection-nutrition {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-
-  .nut-pill {
-    background: var(--cream);
-    border-radius: 8px;
-    padding: 6px 8px;
-    text-align: center;
-  }
-
-  .nut-pill-val {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  .nut-pill-lbl {
-    font-size: 10px;
-    color: var(--ink-light);
-    margin-top: 1px;
-  }
-
-  .detection-portion {
-    font-size: 12px;
-    color: var(--ink-light);
-    margin-top: 8px;
-  }
-
-  .detection-top3 {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--ink-light);
-  }
-
-  /* ── Loading ────────────────────────────────────────────── */
-  .loading-overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 48px;
-    gap: 20px;
-  }
-
-  .spinner {
-    width: 56px; height: 56px;
-    border: 3px solid var(--border);
-    border-top-color: var(--saffron);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-
-  .loading-sub {
-    font-size: 14px;
-    color: var(--ink-light);
-    margin-top: -12px;
-  }
-
-  /* ── Error ──────────────────────────────────────────────── */
-  .error-box {
-    background: #FFF5F5;
-    border: 1.5px solid #FFCCCC;
-    border-radius: var(--radius-sm);
-    padding: 20px;
-    color: #C0392B;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  /* ── Threshold slider ───────────────────────────────────── */
-  .controls-bar {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    box-shadow: var(--shadow);
-  }
-
-  .control-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink-mid);
-    white-space: nowrap;
-  }
-
-  .control-label span {
-    color: var(--saffron);
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-  }
-
-  input[type=range] {
-    flex: 1;
-    min-width: 100px;
-    accent-color: var(--saffron);
-  }
-
-  .btn-analyze {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 24px;
-    background: var(--leaf);
-    color: white;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .btn-analyze:hover { background: var(--leaf-light); }
-  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* ── Footer ─────────────────────────────────────────────── */
-  .footer {
-    text-align: center;
-    padding: 32px;
-    font-size: 12px;
-    color: var(--ink-light);
-    border-top: 1px solid var(--border);
-  }
-
-  .footer a { color: var(--saffron); text-decoration: none; }
-
-  /* ── Animations ─────────────────────────────────────────── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .fade-up { animation: fadeUp 0.4s ease forwards; }
-  .fade-up-delay-1 { animation: fadeUp 0.4s 0.1s ease both; }
-  .fade-up-delay-2 { animation: fadeUp 0.4s 0.2s ease both; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --saffron:#FF6B35;--saffron-dark:#E55A25;
+  --leaf:#2D6A4F;--leaf-light:#52B788;
+  --cream:#FFFBF5;--ink:#1A1A2E;--ink-mid:#3D3D5C;--ink-light:#8888AA;
+  --card:#FFFFFF;--border:#E8E0D5;
+  --shadow:0 4px 24px rgba(26,26,46,.08);--shadow-lg:0 12px 48px rgba(26,26,46,.14);
+  --r:16px;--rs:10px
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 20%,rgba(255,107,53,.05) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(82,183,136,.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+#root{position:relative;z-index:1}
+.hdr{padding:20px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(255,251,245,.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--saffron),#FF9563);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px}
+.logo-text span{color:var(--saffron)}
+.hdr-badge{font-size:11px;font-weight:500;color:var(--ink-light);background:var(--border);padding:4px 12px;border-radius:20px;letter-spacing:.5px}
+.hero{text-align:center;padding:60px 40px 40px;max-width:680px;margin:0 auto}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--leaf);background:rgba(82,183,136,.12);border:1px solid rgba(82,183,136,.25);padding:5px 14px;border-radius:20px;margin-bottom:20px;letter-spacing:.5px}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--saffron)}
+.hero p{font-size:16px;line-height:1.7;color:var(--ink-mid);font-weight:300}
+.section{max-width:780px;margin:0 auto;padding:0 40px 40px}
+.drop{border:2px dashed var(--border);border-radius:var(--r);padding:56px 40px;text-align:center;cursor:pointer;transition:all .25s;background:var(--card)}
+.drop:hover,.drop.drag{border-color:var(--saffron);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.drop-icon{width:64px;height:64px;margin:0 auto 18px;background:linear-gradient(135deg,rgba(255,107,53,.1),rgba(247,197,159,.2));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.drop-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px}
+.drop-sub{font-size:13px;color:var(--ink-light);margin-bottom:20px}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:11px 26px;background:var(--saffron);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;border:none;border-radius:50px;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(255,107,53,.3)}
+.btn-primary:hover{background:var(--saffron-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,53,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-green{background:var(--leaf)}.btn-green:hover{background:var(--leaf-light)}
+.btn-ghost{background:none;border:none;color:var(--saffron);font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;padding:0}
+.controls{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow);margin-bottom:8px}
+.ctrl-label{font-size:13px;font-weight:500;color:var(--ink-mid);white-space:nowrap}
+.ctrl-label strong{color:var(--saffron);font-family:'Syne',sans-serif}
+input[type=range]{flex:1;min-width:80px;accent-color:var(--saffron)}
+.pgrid{max-width:1080px;margin:0 auto;padding:0 40px 72px;display:grid;grid-template-columns:1fr 400px;gap:24px;align-items:start}
+@media(max-width:860px){.pgrid{grid-template-columns:1fr}}
+.img-card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.img-card img{width:100%;display:block;object-fit:contain;max-height:500px;background:#f5f5f5}
+.img-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.img-footer span{font-size:13px;color:var(--ink-light)}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+.total-card{background:linear-gradient(135deg,#1A1A2E,#2D2D4E);color:#fff;border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+.total-lbl{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;opacity:.55;margin-bottom:14px}
+.total-kcal{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;line-height:1;color:#F7C59F}
+.total-kcal span{font-size:16px;font-weight:400;opacity:.6}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.macro{background:rgba(255,255,255,.08);border-radius:10px;padding:10px 8px;text-align:center}
+.macro-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#52B788}
+.macro-lbl{font-size:11px;opacity:.55;margin-top:2px}
+.dlist{display:flex;flex-direction:column;gap:10px}
+.dcard{background:var(--card);border-radius:var(--rs);padding:14px;box-shadow:var(--shadow);border-left:4px solid var(--saffron);transition:transform .15s}
+.dcard:hover{transform:translateX(2px)}
+.dhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.dname{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.dconf{font-size:12px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(82,183,136,.12);color:var(--leaf)}
+.dnuts{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.npill{background:var(--cream);border-radius:7px;padding:5px 6px;text-align:center}
+.npill-v{font-size:12px;font-weight:600}
+.npill-l{font-size:10px;color:var(--ink-light);margin-top:1px}
+.dportion{font-size:11px;color:var(--ink-light);margin-top:7px}
+.dtop3{margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:11px;color:var(--ink-light)}
+.loading{display:flex;flex-direction:column;align-items:center;padding:72px 40px;gap:18px}
+.spin{width:52px;height:52px;border:3px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.load-sub{font-size:13px;color:var(--ink-light);margin-top:-10px}
+.errbox{background:#FFF5F5;border:1.5px solid #FFCCCC;border-radius:var(--rs);padding:18px;color:#C0392B;font-size:13px;line-height:1.6}
+footer{text-align:center;padding:28px;font-size:12px;color:var(--ink-light);border-top:1px solid var(--border)}
+footer a{color:var(--saffron);text-decoration:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .35s ease forwards}
+.fu1{animation:fadeUp .35s .1s ease both}
+.fu2{animation:fadeUp .35s .2s ease both}
 </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script type="text/babel">
-const { useState, useRef, useCallback, useEffect } = React;
+const {useState,useRef,useCallback,useEffect} = React;
 
-// ── Config ─────────────────────────────────────────────────────────────
-const DEFAULT_API = 'https://your-ngrok-url.ngrok.io'; // replace with your ngrok URL
+const API_URL = window.NUTRILENS_API_URL;
 
-function App() {
-  const [apiUrl, setApiUrl]           = useState(DEFAULT_API);
-  const [apiStatus, setApiStatus]     = useState('idle'); // idle | ping | ok | err
-  const [image, setImage]             = useState(null);   // base64 data URL
-  const [fileName, setFileName]       = useState('');
-  const [dragging, setDragging]       = useState(false);
-  const [loading, setLoading]         = useState(false);
-  const [results, setResults]         = useState(null);   // detection results
-  const [error, setError]             = useState(null);
-  const [threshold, setThreshold]     = useState(0.55);
+function App(){
+  const [img,setImg]         = useState(null);
+  const [fname,setFname]     = useState('');
+  const [drag,setDrag]       = useState(false);
+  const [loading,setLoading] = useState(false);
+  const [results,setResults] = useState(null);
+  const [error,setError]     = useState(null);
+  const [thresh,setThresh]   = useState(0.55);
+  const [apiOk,setApiOk]     = useState(null);
   const fileRef = useRef();
 
-  // Check API health
-  useEffect(() => {
-    if (!apiUrl || apiUrl === DEFAULT_API) return;
-    setApiStatus('ping');
-    fetch(`${apiUrl}/health`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(() => setApiStatus('ok'))
-      .catch(() => setApiStatus('err'));
-  }, [apiUrl]);
+  useEffect(()=>{
+    fetch(`${API_URL}/health`)
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(()=>setApiOk(true))
+      .catch(()=>setApiOk(false));
+  },[]);
 
-  const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    setFileName(file.name);
-    setResults(null); setError(null);
-    const reader = new FileReader();
-    reader.onload = e => setImage(e.target.result);
-    reader.readAsDataURL(file);
+  const handleFile = f => {
+    if(!f||!f.type.startsWith('image/')) return;
+    setFname(f.name); setResults(null); setError(null);
+    const r=new FileReader();
+    r.onload=e=>setImg(e.target.result);
+    r.readAsDataURL(f);
   };
 
-  const onDrop = useCallback((e) => {
-    e.preventDefault(); setDragging(false);
+  const onDrop = useCallback(e=>{
+    e.preventDefault(); setDrag(false);
     handleFile(e.dataTransfer.files[0]);
-  }, []);
+  },[]);
 
-  const analyze = async () => {
-    if (!image) return;
+  const analyze = async()=>{
+    if(!img) return;
     setLoading(true); setError(null); setResults(null);
-    try {
-      const resp = await fetch(`${apiUrl}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image, conf_thresh: threshold })
+    try{
+      const resp = await fetch(`${API_URL}/predict`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({image:img,conf_thresh:thresh})
       });
       const data = await resp.json();
-      if (!resp.ok || !data.success) throw new Error(data.error || 'Prediction failed');
+      if(!resp.ok||!data.success) throw new Error(data.error||'Prediction failed');
       setResults(data);
-    } catch (e) {
+    }catch(e){
       setError(e.message);
-    } finally {
+    }finally{
       setLoading(false);
     }
   };
 
-  const reset = () => {
-    setImage(null); setResults(null); setError(null); setFileName('');
-  };
+  const reset=()=>{setImg(null);setResults(null);setError(null);setFname('');};
 
   return (
     <div>
-      {/* Header */}
-      <header className="header">
+      <header className="hdr">
         <div className="logo">
           <div className="logo-icon">🍛</div>
           <div className="logo-text">Nutri<span>Lens</span></div>
         </div>
-        <div className="header-tag">Indian Food AI · Khana Dataset</div>
+        <div className="hdr-badge">
+          {apiOk===true?'🟢 API Connected':apiOk===false?'🔴 API Offline':'⏳ Checking...'}
+        </div>
       </header>
 
-      {/* Hero */}
-      {!image && (
-        <section className="hero fade-up">
-          <div className="hero-pill">
-            ✦ Powered by EfficientNet-B0 + USDA FoodData Central
-          </div>
+      {!img&&(
+        <section className="hero fu">
+          <div className="pill">✦ Powered by EfficientNet-B0 + USDA FoodData Central</div>
           <h1>Identify <em>any</em> Indian food<br/>instantly</h1>
           <p>Upload a photo of your meal — single dish or full thali — and get instant food identification, portion estimates, and complete nutritional breakdown.</p>
         </section>
       )}
 
-      {/* API Config */}
-      {!image && (
-        <div className="api-config fade-up-delay-1">
-          <div className="api-input-row">
-            <div className={`api-status ${apiStatus}`}></div>
-            <input
-              className="api-input"
-              type="text"
-              placeholder="Paste your ngrok API URL here (e.g. https://xxxx.ngrok.io)"
-              value={apiUrl === DEFAULT_API ? '' : apiUrl}
-              onChange={e => setApiUrl(e.target.value)}
-            />
-          </div>
-          <div className="api-hint">
-            {apiStatus === 'ok'  && '✅ API connected and ready'}
-            {apiStatus === 'err' && '❌ Cannot connect to API — make sure your Colab backend is running'}
-            {apiStatus === 'ping'&& '⏳ Connecting...'}
-            {apiStatus === 'idle'&& 'Start the Flask backend in Google Colab, then paste the ngrok URL above'}
+      {!img&&apiOk===false&&(
+        <div style={{maxWidth:640,margin:'0 auto 16px',padding:'0 40px'}}>
+          <div className="errbox">
+            ⚠️ Cannot reach the API. The Render server may be waking up (takes ~30 sec on free tier). Try again in a moment.
           </div>
         </div>
       )}
 
-      {/* Upload zone */}
-      {!image && (
-        <section className="upload-section fade-up-delay-2">
+      {!img&&(
+        <section className="section fu1">
           <div
-            className={`drop-zone ${dragging ? 'dragging' : ''}`}
-            onClick={() => fileRef.current.click()}
-            onDragOver={e => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
+            className={`drop ${drag?'drag':''}`}
+            onClick={()=>fileRef.current.click()}
+            onDragOver={e=>{e.preventDefault();setDrag(true);}}
+            onDragLeave={()=>setDrag(false)}
             onDrop={onDrop}
           >
             <div className="drop-icon">📸</div>
             <div className="drop-title">Drop your food photo here</div>
-            <div className="drop-sub">Supports JPG, PNG, WEBP · Max 10MB</div>
-            <button className="btn-upload" onClick={e => { e.stopPropagation(); fileRef.current.click(); }}>
+            <div className="drop-sub">Supports JPG, PNG, WEBP · Single dish or full thali</div>
+            <button className="btn-primary" onClick={e=>{e.stopPropagation();fileRef.current.click();}}>
               Choose Image
             </button>
-            <input
-              ref={fileRef} type="file" accept="image/*" hidden
-              onChange={e => handleFile(e.target.files[0])}
-            />
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={e=>handleFile(e.target.files[0])}/>
           </div>
         </section>
       )}
 
-      {/* Image selected — show controls + analyze */}
-      {image && !loading && (
-        <section className="upload-section fade-up" style={{paddingTop: 32}}>
-          <div className="controls-bar">
-            <span className="control-label">
-              Confidence threshold: <span>{Math.round(threshold * 100)}%</span>
-            </span>
-            <input
-              type="range" min="0.3" max="0.85" step="0.05"
-              value={threshold}
-              onChange={e => setThreshold(parseFloat(e.target.value))}
-            />
-            <button className="btn-retry" onClick={reset}>← New image</button>
-            <button
-              className="btn-analyze"
-              onClick={analyze}
-              disabled={apiStatus !== 'ok' && !results}
-            >
-              {results ? '🔄 Re-analyze' : '🔍 Analyze Food'}
+      {img&&!loading&&(
+        <div className="section fu" style={{paddingTop:28}}>
+          <div className="controls">
+            <span className="ctrl-label">Confidence: <strong>{Math.round(thresh*100)}%</strong></span>
+            <input type="range" min="0.3" max="0.85" step="0.05" value={thresh} onChange={e=>setThresh(parseFloat(e.target.value))}/>
+            <button className="btn-ghost" onClick={reset}>← New image</button>
+            <button className="btn-primary btn-green" onClick={analyze} disabled={loading}>
+              {results?'🔄 Re-analyze':'🔍 Analyze Food'}
             </button>
           </div>
-          {apiStatus !== 'ok' && !results && (
-            <p style={{fontSize:13,color:'#e74c3c',marginTop:10}}>
-              ⚠️ Please connect to the API above before analyzing.
-            </p>
-          )}
-        </section>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="loading-overlay fade-up">
-          <div className="spinner"></div>
-          <div className="loading-text">Analyzing your food...</div>
-          <div className="loading-sub">Running TTA detection + nutrition lookup</div>
+          {error&&<div className="errbox" style={{marginTop:8}}><strong>Error:</strong> {error}</div>}
         </div>
       )}
 
-      {/* Error */}
-      {error && (
-        <div className="upload-section">
-          <div className="error-box">
-            <strong>Error:</strong> {error}<br/>
-            <small style={{opacity:0.7}}>Make sure your Colab backend is running and the ngrok URL is correct.</small>
+      {loading&&(
+        <div className="loading fu">
+          <div className="spin"/>
+          <div className="load-title">Analyzing your food...</div>
+          <div className="load-sub">Running TTA detection + USDA nutrition lookup</div>
+        </div>
+      )}
+
+      {results&&!loading&&(
+        <div className="pgrid fu">
+          <div className="img-card">
+            <img src={results.annotated} alt="Food detection result"/>
+            <div className="img-footer">
+              <span>🍽 {results.detections.length} food{results.detections.length!==1?'s':''} detected · {results.model}</span>
+              <button className="btn-ghost" onClick={reset}>New image</button>
+            </div>
+          </div>
+          <div className="rpanel">
+            <div className="total-card">
+              <div className="total-lbl">Total Nutrition</div>
+              <div className="total-kcal">{results.total_nutrition.calories} <span>kcal</span></div>
+              <div className="macros">
+                <div className="macro"><div className="macro-val">{results.total_nutrition.protein}g</div><div className="macro-lbl">Protein</div></div>
+                <div className="macro"><div className="macro-val">{results.total_nutrition.carbs}g</div><div className="macro-lbl">Carbs</div></div>
+                <div className="macro"><div className="macro-val">{results.total_nutrition.fat}g</div><div className="macro-lbl">Fat</div></div>
+              </div>
+            </div>
+            <div className="dlist">
+              {results.detections.map(d=>(
+                <div key={d.id} className="dcard" style={{borderLeftColor:d.color}}>
+                  <div className="dhead">
+                    <div className="dname">{d.food_display}</div>
+                    <div className="dconf">{d.confidence}%</div>
+                  </div>
+                  <div className="dnuts">
+                    <div className="npill"><div className="npill-v">{d.nutrition.calories}</div><div className="npill-l">kcal</div></div>
+                    <div className="npill"><div className="npill-v">{d.nutrition.protein}g</div><div className="npill-l">protein</div></div>
+                    <div className="npill"><div className="npill-v">{d.nutrition.carbs}g</div><div className="npill-l">carbs</div></div>
+                    <div className="npill"><div className="npill-v">{d.nutrition.fat}g</div><div className="npill-l">fat</div></div>
+                  </div>
+                  <div className="dportion">~{d.nutrition.portion_g}g estimated · {d.nutrition.source}</div>
+                  <div className="dtop3">Top‑3: {d.top3.map(([n,c])=>`${n.replace(/_/g,' ')} ${c}%`).join(' · ')}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Results */}
-      {results && !loading && (
-        <section className="preview-section fade-up">
-          <div className="preview-grid">
-            {/* Annotated image */}
-            <div className="image-card">
-              <img src={results.annotated} alt="Annotated food detection"/>
-              <div className="image-card-footer">
-                <span>📍 {results.detections.length} food{results.detections.length !== 1 ? 's' : ''} detected · {results.model}</span>
-                <button className="btn-retry" onClick={reset}>New image</button>
-              </div>
-            </div>
-
-            {/* Results panel */}
-            <div className="results-panel">
-              {/* Total nutrition */}
-              <div className="nutrition-total">
-                <div className="nutrition-total-label">Total Nutrition</div>
-                <div className="nutrition-total-kcal">
-                  {results.total_nutrition.calories} <span>kcal</span>
-                </div>
-                <div className="nutrition-macros">
-                  <div className="macro-item">
-                    <div className="macro-value">{results.total_nutrition.protein}g</div>
-                    <div className="macro-label">Protein</div>
-                  </div>
-                  <div className="macro-item">
-                    <div className="macro-value">{results.total_nutrition.carbs}g</div>
-                    <div className="macro-label">Carbs</div>
-                  </div>
-                  <div className="macro-item">
-                    <div className="macro-value">{results.total_nutrition.fat}g</div>
-                    <div className="macro-label">Fat</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Per-food detections */}
-              <div className="detections-list">
-                {results.detections.map(d => (
-                  <div
-                    key={d.id}
-                    className="detection-card"
-                    style={{borderLeftColor: d.color}}
-                  >
-                    <div className="detection-header">
-                      <div className="detection-name">{d.food_display}</div>
-                      <div className="detection-conf">{d.confidence}%</div>
-                    </div>
-                    <div className="detection-nutrition">
-                      <div className="nut-pill">
-                        <div className="nut-pill-val">{d.nutrition.calories}</div>
-                        <div className="nut-pill-lbl">kcal</div>
-                      </div>
-                      <div className="nut-pill">
-                        <div className="nut-pill-val">{d.nutrition.protein}g</div>
-                        <div className="nut-pill-lbl">protein</div>
-                      </div>
-                      <div className="nut-pill">
-                        <div className="nut-pill-val">{d.nutrition.carbs}g</div>
-                        <div className="nut-pill-lbl">carbs</div>
-                      </div>
-                      <div className="nut-pill">
-                        <div className="nut-pill-val">{d.nutrition.fat}g</div>
-                        <div className="nut-pill-lbl">fat</div>
-                      </div>
-                    </div>
-                    <div className="detection-portion">
-                      ~{d.nutrition.portion_g}g estimated · {d.nutrition.source}
-                    </div>
-                    <div className="detection-top3">
-                      Top-3: {d.top3.map(([n,c]) => `${n.replace(/_/g,' ')} ${c}%`).join(' · ')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {img&&!results&&!loading&&(
+        <div style={{maxWidth:600,margin:'0 auto',padding:'0 40px 40px'}} className="fu">
+          <div className="img-card">
+            <img src={img} alt="Uploaded" style={{maxHeight:380}}/>
+            <div className="img-footer"><span>📄 {fname}</span></div>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Original image preview (before analysis) */}
-      {image && !results && !loading && (
-        <section className="preview-section fade-up">
-          <div style={{maxWidth: 600, margin: '0 auto'}}>
-            <div className="image-card">
-              <img src={image} alt="Uploaded food" style={{maxHeight: 400}}/>
-              <div className="image-card-footer">
-                <span>📄 {fileName}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <footer className="footer">
-        NutriLens · Khana Dataset (arXiv:2509.06006) · Nutrition data from{' '}
-        <a href="https://fdc.nal.usda.gov" target="_blank">USDA FoodData Central</a>
+      <footer>
+        NutriLens · Khana Dataset (arXiv:2509.06006) ·
+        Nutrition from <a href="https://fdc.nal.usda.gov" target="_blank">USDA FoodData Central</a>
       </footer>
     </div>
   );
