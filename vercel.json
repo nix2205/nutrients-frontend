@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-     "destination" : "https://YOUR-USERNAME-nutrilens-api.hf.space"
+     "destination" : "https://nix2205-nutrilens-api.hf.space"
     }
   ]
 }
