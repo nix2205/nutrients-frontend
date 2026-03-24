@@ -104,6 +104,23 @@ const {useState,useRef,useCallback,useEffect} = React;
 
 const API_URL = window.NUTRILENS_API_URL;
 
+// ── Frontend deduplication safety net ────────────────────────────────
+// Even if the backend somehow sends duplicates, this removes them.
+// Keeps only the highest-confidence entry per food label.
+function deduplicateDetections(detections) {
+  const seen = {};
+  for (const d of detections) {
+    const label = d.food;
+    if (!seen[label] || d.confidence > seen[label].confidence) {
+      seen[label] = d;
+    }
+  }
+  // Return sorted by confidence descending, re-numbered
+  return Object.values(seen)
+    .sort((a, b) => b.confidence - a.confidence)
+    .map((d, i) => ({ ...d, id: i + 1 }));
+}
+
 function App(){
   const [img,setImg]         = useState(null);
   const [fname,setFname]     = useState('');
@@ -146,6 +163,18 @@ function App(){
       });
       const data = await resp.json();
       if(!resp.ok||!data.success) throw new Error(data.error||'Prediction failed');
+
+      // ── Deduplicate on frontend as safety net ──
+      data.detections = deduplicateDetections(data.detections);
+
+      // Recalculate totals after dedup
+      data.total_nutrition = {
+        calories: data.detections.reduce((s,d)=>s+d.nutrition.calories, 0),
+        protein:  Math.round(data.detections.reduce((s,d)=>s+d.nutrition.protein, 0) * 10) / 10,
+        carbs:    Math.round(data.detections.reduce((s,d)=>s+d.nutrition.carbs,   0) * 10) / 10,
+        fat:      Math.round(data.detections.reduce((s,d)=>s+d.nutrition.fat,     0) * 10) / 10,
+      };
+
       setResults(data);
     }catch(e){
       setError(e.message);
