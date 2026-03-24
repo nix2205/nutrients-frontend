@@ -13,7 +13,7 @@
      CONFIG — change this one line to your Render backend URL
      ============================================================ -->
 <script>
-  window.NUTRILENS_API_URL = 'https://nutrients-backend.onrender.com';
+  window.NUTRILENS_API_URL = "";
 </script>
 <!-- ============================================================ -->
 
@@ -116,7 +116,7 @@ function App(){
   const fileRef = useRef();
 
   useEffect(()=>{
-    fetch(`${API_URL}/health`)
+    fetch(`/api/health`)
       .then(r=>r.ok?r.json():Promise.reject())
       .then(()=>setApiOk(true))
       .catch(()=>setApiOk(false));
@@ -139,7 +139,7 @@ function App(){
     if(!img) return;
     setLoading(true); setError(null); setResults(null);
     try{
-      const resp = await fetch(`${API_URL}/predict`,{
+      const resp = await fetch(`/api/predict`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({image:img,conf_thresh:thresh})
