@@ -1,8 +1,16 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-     "destination" : "https://nix2205-nutrilens-api.hf.space"
+      "source": "/api/health",
+      "destination": "https://nix2205-nutrilens-api.hf.space/health"
+    },
+    {
+      "source": "/api/predict",
+      "destination": "https://nix2205-nutrilens-api.hf.space/predict"
+    },
+    {
+      "source": "/api/classes",
+      "destination": "https://nix2205-nutrilens-api.hf.space/classes"
     }
   ]
 }
