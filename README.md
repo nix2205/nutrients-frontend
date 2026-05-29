@@ -155,21 +155,13 @@ NutriLens was designed as a reusable research platform where different datasets 
 
 ## Screenshots
 
-### Home Page
+### Uploading Interface
 
-<!-- Add Screenshot -->
+<img width="1914" height="864" alt="image" src="https://github.com/user-attachments/assets/a05184f4-977d-4ea1-872a-24e2c5146f83" />
 
-### Food Upload Interface
+### Results
+<img width="1895" height="872" alt="image" src="https://github.com/user-attachments/assets/e09e748b-2f8f-46be-82f6-ce3761297323" />
 
-<!-- Add Screenshot -->
-
-### Detection Results
-
-<!-- Add Screenshot -->
-
-### Nutrition Analysis
-
-<!-- Add Screenshot -->
 
 ---
 
